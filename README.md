@@ -17,7 +17,7 @@ SerialPort.list().then(
 )
 ```
 
-``bash
+```bash
 {
     path: 'COM3',
     manufacturer: 'Arduino LLC (www.arduino.cc)',
