@@ -1,21 +1,10 @@
 const SerialPort = require('serialport')
-SerialPort.list().then(
-  ports => ports.forEach(elem => console.log(elem))
-)
-/*
-var SerialPort = require('serialport');
+const ByteLength = require('@serialport/parser-byte-length')
 var port = new SerialPort('COM3', {
     baudRate: 115200
 });
 
-// Switches the port into "flowing mode"
-/*
-port.on('data', function (data) {
-    console.log('Data:', data);
+const parser = port.pipe(new ByteLength({length: 2}))
+parser.on('data', function (data) {
+  console.log('Data:', parseInt(data.toString('hex'), 16));
 });
-*/
-
-/*
-const lineStream = port.pipe(new Readline())
-console.log('lineStream:', lineStream);
-*/
