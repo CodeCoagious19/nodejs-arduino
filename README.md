@@ -1,8 +1,8 @@
-# Libreria SerialPort
-- [Libreria SerialPort](#libreria-serialport)
+# Libreria node.js SerialPort
+- [Libreria node.js SerialPort](#libreria-nodejs-serialport)
   - [Link utili](#link-utili)
   - [Primo script](#primo-script)
-- [Leggere dati dalla seriale](#leggere-dati-dalla-seriale)
+- [Leggere dati dalla seriale con SerialPort](#leggere-dati-dalla-seriale-con-serialport)
   - [Script lato nodejs](#script-lato-nodejs)
     - [Costruttore SerialPort()](#costruttore-serialport)
       - [parametro `path`](#parametro-path)
@@ -17,6 +17,10 @@
     - [Lato Arduino](#lato-arduino)
     - [Lato node.js](#lato-nodejs)
     - [Endianess?](#endianess)
+- [Trasmettere dati dalla seriale con SerialPort](#trasmettere-dati-dalla-seriale-con-serialport)
+  - [SerialPort.write()](#serialportwrite)
+    - [Esempio semplice di trasmissione dati con SerialPort](#esempio-semplice-di-trasmissione-dati-con-serialport)
+    - [Esempio avanzato di trasmissione dati con SerialPort](#esempio-avanzato-di-trasmissione-dati-con-serialport)
 
 
 ## Link utili
@@ -58,7 +62,7 @@ USBarray.then((res) => {
 
 Potrebbe essere utilizzato per verificare che sia collegato arduino alla porta USB
 
-# Leggere dati dalla seriale
+# Leggere dati dalla seriale con SerialPort
 
 Uno script semplice per leggere dati dalla seriale è il seguente:
 
@@ -365,59 +369,154 @@ Quando trasmetti e ricevi dei byte su un canale di trasmissione devi sempre assi
 
 Per questo mi sono reso conto, sbagliando (per fortuna!) che l'endianess era sbagliato solo inviando un intero e reinterpretandolo. Ho dovuto invertire quindi (lato Arduino) la parte bassa con la parte alta
 
+# Trasmettere dati dalla seriale con SerialPort
+
+Per la trasmissione dati, si usa il metodo `.write()`.
+
+`.write()` scrive i dati sulla porta seriale specificata. Memorizza i dati scritti se la porta non è aperta e li scrive dopo l'apertura della porta. L'operazione di scrittura non è bloccante. Quando ritorna, i dati potrebbero non essere ancora stati scritti sulla porta seriale.
+
+**Nota 1 - Apertura di una connessione e Arduino**
+Molti dispositivi come Arduino si ripristinano quando apri una connessione ad essi. In questi casi, la scrittura immediata sul dispositivo causerà la perdita dei dati trasmessi poiché i dispositivi non saranno pronti a ricevere i dati. Questo viene spesso aggirato facendo in modo che Arduino invii un byte "pronto" che il programma Node attende prima di scrivere. Spesso puoi anche farla franca aspettando un importo prestabilito, circa 400 ms. Vedere `ReadyParser` per una soluzione a questo problema.
+
+**Nota 2 -  Gestione degli errori**
+Se una porta viene disconnessa durante una scrittura, la scrittura produrrà un errore oltre all'evento `close`
+
+**Nota 3 - Gestione degli errori**
+Se si verifica un errore, il callback può o meno essere chiamato con l'errore come primo argomento. Per rilevare in modo affidabile gli errori di scrittura, aggiungi un listener per l'evento "errore".
+
+## SerialPort.write()
+
+Prototipo del metodo `.write()`:
+```javascript
+serialport.write(data: string|Buffer|Array<number>, encoding?: string, callback?: error => {}): boolean
+```
+
+**Parametri:**
+
+- `data`: Può essere una `string`, un `Buffer` o `Array` di `number`.
+- `encoding`: E' un parametro opzionale di tipo `string` e rappresenta la codifica che può essere `utf8`, `ascii`, `base64`, `binary`, `hex`
+- `callback`: E' un parametro opzionale che rappresenta la callback chiamata al termine dell'operazione di scrittura. I dati potrebbero non essere ancora drenati nella porta sottostante.
+
+**Tipo di ritorno**
+
+Restituisce `false` se lo stream desidera che il codice chiamante attenda l'emissione dell'evento drain prima di continuare a scrivere dati aggiuntivi; altrimenti `vero`.
 
 
+### Esempio semplice di trasmissione dati con SerialPort
 
+Vediamo un esempio semplice di trasmissione dati con SerialPort. 
+- Creo un `Buffer` che contiene un solo `byte` del valore di `65`.
+- Per aggirare il problema del **reset di Arduino all'apertura della connessione**, vedi anche [qui](#trasmettere-dati-dalla-seriale-con-serialport), mi metto in ascolto di un *qualsiasi* dato da Arduino aspettando l'evento `data` che poi stampo a video.
+- Solo in questo momento posso considerare stabilita la connessione quindi scrivo un dato, o meglio un byte dell'oggetto `Buffer`
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Naturalmente non è una gestione ottimale ma volevo mantenere uno script semplice lato node.js
 
 ```javascript
 var serialport = require("serialport");
-var SerialPort = serialport.SerialPort;
+const buf = Buffer.from([65]);
 
-var sp = new SerialPort("/dev/ttyACM0", {
-  baudrate: 9600,
-  parser: serialport.parsers.readline("\n")
+var sp = new serialport('COM3', {
+  baudRate: 115200,
+});
+
+sp.on('data', data => {
+    console.log('connection estabilished');
+    console.log(parseInt(data.toString('hex'), 16));
+    sp.write(buf);
+});
+```
+
+Lato Arduino invece trasmetto il dato `233` finchè non verrà letto da node.js che rappresenta lo stato `READY` di Arduino. Quando node.js legge il dato mandato da Arduino e invia il byte `65`. Arduino riceve il dato, smette di trasmettere il dato `233` e valuta il dato ricevuto da node.js. Se è `65` accende il LED, se non è `65` spegna il LED
+
+```cpp
+byte incomingByte[1]; // for incoming serial data
+bool isReadyTransimetted = false;
+
+void setup() {
+  Serial.begin(115200); // opens serial port, sets data rate to 9600 bps
+  pinMode(13, OUTPUT);
+}
+
+void loop() {
+  // send data only when you receive data:
+  if (Serial.available() > 0) {
+    isReadyTransimetted = true;
+    // read the incoming byte:
+    Serial.readBytes(incomingByte, 1);
+
+    if (incomingByte[0] == 65){
+      digitalWrite(13, HIGH); 
+    }
+    else{
+      digitalWrite(13, LOW); 
+    }
+  }
+  else{
+    if (!isReadyTransimetted){
+      Serial.write(233);
+      delay(1000);
+    }
+  }
+}
+```
+
+### Esempio avanzato di trasmissione dati con SerialPort
+
+Questo esempio sarà un po' più interessante rispetto all'esempio precedente. Con node.js farò blinkare il LED di Arduino.
+Lato node.js ho creato due funzioni...
+
+```javascript
+var serialport = require("serialport");
+var byteFromArduino = '';
+let connectionEstabilished = false;
+let varToggle = false;
+const buf = Buffer.from([65]);
+const buf2 = Buffer.from([66]);
+
+var sp = new serialport('COM3', {
+  baudRate: 115200,
 });
 
 function write() //for writing
 {
-    sp.on('data', function (data) 
-    {
-        sp.write("Write your data here");
-    });
+  if (connectionEstabilished){
+    if (varToggle){
+      console.log('LED ON, pin 13');
+      sp.write(buf);
+      varToggle = !varToggle;
+    }
+    else{
+      console.log('LED OFF, pin 13');
+      sp.write(buf2);
+      varToggle = !varToggle;
+    }
+  }
 }
 
-function read () // for reading
-{
-    sp.on('data', function(data)
-    {
-        console.log(data); 
-    });
+function waitForConnection(){
+  sp.on('data', function (data) 
+  {
+    byteFromArduino = parseInt(data.toString('hex'), 16); 
+    console.log(byteFromArduino);
+    if (byteFromArduino === 233){
+      console.log('connection estabilished');
+      connectionEstabilished = true;
+    }
+    else{
+      console.log('connection not estabilished');
+      connectionEstabilished = false;
+    }
+
+  });
 }
 
 sp.on('open', function() 
 {
     // execute your functions
-    write(); 
-    read(); 
+    waitForConnection();
+    setInterval(write,1000);
 });
 ```
+
+
+
