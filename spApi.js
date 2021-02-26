@@ -2,8 +2,8 @@
 const rxjs = require('rxjs');
 const serialport = require("serialport");
 const Readline = require('@serialport/parser-readline');
-const ByteLength = require('@serialport/parser-byte-length')
-const Ready = require('@serialport/parser-ready')
+const ByteLength = require('@serialport/parser-byte-length');
+const Ready = require('@serialport/parser-ready');
 const { resolve } = require('path');
 
 /*
@@ -13,21 +13,14 @@ parser.on('ready', () => console.log('the ready byte sequence has been received'
 
 class ArduinoSerialCommunication extends serialport {
 
-    _spStatus = {
-        openConnection: false,
-        connectionEstabilished: false
-    }
-
-
     constructor(_ = { arduinoPort: com, arduinoBaudRate: baudRate }) {
         super(_.arduinoPort, {
             baudRate: _.arduinoBaudRate,
             autoOpen: false
-        })
-    }
-
-    get spStatus(){
-        return this._spStatus;
+        });
+        this._openConnection = false;
+        this._connectionEstabilished = false;
+        this._frameByteLength = 9;
     }
 
     openConnection() {
@@ -37,69 +30,147 @@ class ArduinoSerialCommunication extends serialport {
                     reject(err);
                 }
                 else
-                    this._spStatus.openConnection = true;
+                    this._openConnection = true;
                 resolve(true);
-            })
-        })
+            });
+        });
     }
 
-    waitForConnection(keyFrameObj)
+    waitForConnection(slaveKeyFrameRxObj, masterKeyFrameTxObj)
     {
         return new Promise((resolve, reject) => {
             //check if the connection is open
-            if (this._spStatus.openConnection !== true)
+            if (this._openConnection !== true)
                 reject("[Error: The connection is not open]");
 
             let receivedFrameArray = [];
-            let keyFrameArray = [];
 
-            //convert keyFrameObj into keyFrameArray
-            for(let prop in keyFrameObj){
-                keyFrameArray.push(keyFrameObj[prop]);
+            // TODO: realizza una funzione che:
+            // - trasfroma un oggetto in un buffer per la trasmissione
+            // - trasfroma un buffer in un oggetto per la ricezione
+            // - una funzione che confronta due oggetti
+            let slaveKeyFrameRxArray = [];
+            let masterKeyFrameTxArray = [];
+
+            //convert slaveKeyFrameRxObj into slaveKeyFrameRxArray
+            for(let prop in slaveKeyFrameRxObj){
+                slaveKeyFrameRxArray.push(slaveKeyFrameRxObj[prop]);
+            }
+
+            //convert masterKeyFrameTxObj into masterKeyFrameTxArray
+            for(let prop in masterKeyFrameTxObj){
+                masterKeyFrameTxArray.push(masterKeyFrameTxObj[prop]);
             }
 
             //read from Arduino
-            const parser = super.pipe(new ByteLength({length: keyFrameArray.length}))
+            const parser = super.pipe(new ByteLength({length: this._frameByteLength}));
             parser.on('data', data => {
 
                 //read Received byte and write into receivedFrameArray
                 for(let i = 0; i<parser.length; i++){
-                    receivedFrameArray[i] = data.readUInt8(i).toString();
+                    receivedFrameArray[i] = data.readUInt8(i);
                 }
 
-                //compare receivedFrameArray with keyFrameArray
+                //compare receivedFrameArray with slaveKeyFrameRxArray
                 //must be equals
                 let equals = true;
                 for(let i = 0; i<parser.length; i++){
-                    equals &= (receivedFrameArray[i] == keyFrameArray[i]); 
+                    equals &= (receivedFrameArray[i] == slaveKeyFrameRxArray[i]);
                 }
                 if (equals){
-                    this._spStatus.connectionEstabilished = true;
+                    //convert masterFrameArray into masterFrameBuffer
+                    const masterKeyFrameTxBuffer = Buffer.from(masterKeyFrameTxArray);
+
+                    super.write(masterKeyFrameTxBuffer, err => {
+                        if (err)
+                            reject(err);
+                        else
+                            resolve("[Success: write completed]");
+                    });
+
+                    this._connectionEstabilished = true;
                     resolve(true);
                 }
                 else{
                     reject("[Error: The key from arduino is not correct]");
                 }
-            })
-        })
+            });
+        });
     }
 
-    writeFrame(seqId, dutyCicle, Frequency) {
-        const buf_seqID = Buffer.allocUnsafe(1);
-        buf_seqID.writeUInt8(seqId);
+    writeFrame(masterFrameObj) {
+        return new Promise((resolve, reject) => {
+            //check if the connection is open
+            if (this._connectionEstabilished !== true)
+                reject("[Error: The connection is not estabilished]");
 
-        const buf_dutyCicle = Buffer.allocUnsafe(1);
-        buf_dutyCicle.writeUInt8(dutyCicle);
+            let masterFrameArray = [];
 
-        const buf_frequency = Buffer.allocUnsafe(2);
-        buf_frequency.writeUInt16BE(Frequency);
+            //convert masterFrameObj into masterFrameArray
+            for(let prop in masterFrameObj){
+                masterFrameArray.push(masterFrameObj[prop]);
+            }
 
-        const arrayOfBuffers = [buf_seqID, buf_dutyCicle, buf_frequency];
+            //convert masterFrameArray into masterFrameBuffer
+            const masterFrameBuffer = Buffer.from(masterFrameArray);
 
-        const buffer = Buffer.concat(arrayOfBuffers);
-
-        super.write(buffer);
+            super.write(masterFrameBuffer, err => {
+                if (err)
+                    reject(err);
+                else
+                    resolve("[Seccess: write completed]");
+            });
+        });
     }
+
+    /*
+    onFrameReceived() {
+      const parser = super.pipe(new ByteLength({length: this._frameByteLength}));
+      parser.on('data', data => {
+        if (this._connectionEstabilished === true){
+          let receivedFrameArray = [];
+          for(let i = 0; i<parser.length; i++){
+              receivedFrameArray[i] = data.readUInt8(i);
+          }
+          console.log(receivedFrameArray);
+        }
+        else{
+          let receivedFrameArray = [];
+          for(let i = 0; i<parser.length; i++){
+              receivedFrameArray[i] = data.readUInt8(i);
+          }
+          console.log("Key frame from Arduino..");
+          console.log(receivedFrameArray);
+        }
+      });
+    }
+    */
+
+    onFrameReceived2(eventData, fnCallback) {
+      const parser = super.pipe(new ByteLength({length: this._frameByteLength}));
+      parser.on(eventData, data => {
+        if (this._connectionEstabilished === true){
+          let receivedFrameArray = [];
+          for(let i = 0; i<parser.length; i++){
+              receivedFrameArray[i] = data.readUInt8(i);
+          }
+          fnCallback(receivedFrameArray, "Frame generico ricevuto da Arduino:");
+        }
+        else{
+          let receivedFrameArray = [];
+          for(let i = 0; i<parser.length; i++){
+              receivedFrameArray[i] = data.readUInt8(i);
+          }
+          fnCallback(receivedFrameArray, "Key Frame ricevuto da Arduino:");
+        }
+      });
+    }
+    /*
+
+foo("address", function(location){
+  alert(location); // this is where you get the return value
+});
+*/
 
     /*
     onFrameReceived(func) {
@@ -109,7 +180,7 @@ class ArduinoSerialCommunication extends serialport {
             if(this.spStatus.connectionEstabilished === true)
                 return func(buffer);
         });
-        
+
 
         const parser = super.pipe(new ByteLength({ length: 2 }));
         parser.on('data', data => {
@@ -120,8 +191,4 @@ class ArduinoSerialCommunication extends serialport {
     */
 }
 
-
-
-
-
-module.exports = { ArduinoSerialCommunication: ArduinoSerialCommunication }
+module.exports = { ArduinoSerialCommunication: ArduinoSerialCommunication };
