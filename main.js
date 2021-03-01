@@ -1,60 +1,45 @@
 const spApi = require('./spApi');
-const ByteLength = require('@serialport/parser-byte-length');
+const frameApi = require('./frameApi');
 
-const masterFrameObj = {
-  /*Section1*/
+//Key frame from Slave
+const slaveKeyFrameRx = new frameApi.Frame();
+slaveKeyFrameRx.packet = 
+{
+  slaveFeedbackStatus: 255
+}
+//Key frame to Slave
+const masterKeyFrameTx = new frameApi.Frame();
+masterKeyFrameTx.packet = 
+{
   seqId: 1,
-  /*Section2*/
+  slaveFeedbackStatus: 255
+}
+const masterFrame = new frameApi.Frame();
+masterFrame.packet = 
+{
+  seqId: 1,
   masterCommands: 2,
   pwmFrequency: 3,
   pwmDutyCicle: 4,
   auxOutput: 5,
-  /*Section3*/
   slaveFeedbackStatus: 6,
   pumpFeedback_ms: 7,
   auxInputFeedback: 8,
   auxSlaveError: 9,
-};
+}
 
-const slaveKeyFrameRxObj = {
-  /*Section1*/
-  seqId: 0,
-  /*Section2*/
-  masterCommands: 0,
-  pwmFrequency: 0,
-  pwmDutyCicle: 0,
-  auxOutput: 0,
-  /*Section3*/
-  slaveFeedbackStatus: 255,
-  pumpFeedback_ms: 0,
-  auxInputFeedback: 0,
-  auxSlaveError: 0,
-};
-
-const masterKeyFrameTxObj = {
-  /*Section1*/
-  seqId: 1,
-  /*Section2*/
-  masterCommands: 0,
-  pwmFrequency: 0,
-  pwmDutyCicle: 0,
-  auxOutput: 0,
-  /*Section3*/
-  slaveFeedbackStatus: 255,
-  pumpFeedback_ms: 0,
-  auxInputFeedback: 0,
-  auxSlaveError: 0,
-};
-
-let serialCommunication = new spApi.ArduinoSerialCommunication({
-  arduinoPort: 'COM5',
-  arduinoBaudRate: 115200,
+let serialCommunication = new spApi.SerialCommunication({
+  port: 'COM5',
+  baudRate: 115200,
+  frameLenght: 9
 });
 
-serialCommunication.onFrameReceived2('data', (values, log) => {
+serialCommunication.on('frame', (buffer, description) => {
+  frameReceived = new frameApi.Frame();
+  frameReceived.assignFromBuffer(buffer);
   console.log("\n--------------------------");
-  console.log(log);
-  console.log(values);
+  console.log(description);
+  console.log(frameReceived.packet);
   console.log("--------------------------\n");
 });
 
@@ -77,17 +62,15 @@ let main = async () => {
   console.log('Apro una connessione con Arduino...');
   console.log('Arduino si riavvia...');
   try {
-    await serialCommunication.openConnection();
+    await serialCommunication.open();
   } catch (error) {
     console.log(error);
   }
 
-  //Tento di aprire una connessione con Arduino
-  //La waitForConnection() attende di ricevere una chiave da Arduino, l'oggetto slaveKeyFrameRx
-  //e restituisce ad esso una chiave masterKeyFrameTx
+  //Tento di stabilire una connessione con Arduino
   try {
     console.log('Attendo il key frame da Arduino..');
-    await serialCommunication.waitForConnection(slaveKeyFrameRxObj, masterKeyFrameTxObj);
+    await serialCommunication.waitForConnection(slaveKeyFrameRx.convertToBuffer(), masterKeyFrameTx.convertToBuffer());
     console.log("Il key frame ricevuto da Arduino è corretto.");
     console.log("Invio il key frame per l'autenticazione da parte di Aduino..");
     console.log("Connessione con Arduino stabilita con Successo!");
@@ -96,7 +79,7 @@ let main = async () => {
   }
   try {
     console.log("Invio un frame generico ad Arduino..");
-    await serialCommunication.writeFrame(masterFrameObj);
+    await serialCommunication.writeFrame(masterFrame.convertToBuffer());
     console.log("Frame trasmesso con successo!");
   } catch (error) {
     console.log(error);
