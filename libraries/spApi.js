@@ -4,15 +4,15 @@ const ByteLength = require('@serialport/parser-byte-length');
 
 class SerialCommunication extends serialport {
 
-    constructor(Device = { port: port, baudRate: baudRate, frameLenght: frameLenght }) {
-        super(Device.port, {
-            baudRate: Device.baudRate,
+    constructor(device = { port: port, baudRate: baudRate, frameLenght: frameLenght }) {
+        super(device.port, {
+            baudRate: device.baudRate,
             autoOpen: false
         });
-        this.Sc_Config = {
-            frameLenght: Device.frameLenght
+        this._config = {
+            frameLenght: device.frameLenght
         }
-        this.Sc_Status = {
+        this._status = {
             open: false,
             connectionEstabilished: false
         }
@@ -25,7 +25,7 @@ class SerialCommunication extends serialport {
                     reject(err);
                 }
                 else {
-                    this.Sc_Status.open = true;
+                    this._status.open = true;
                     resolve(true);
                 }
             });
@@ -35,12 +35,12 @@ class SerialCommunication extends serialport {
     waitForConnection(slaveKeyRxBuffer, masterKeyTxBuffer) {
         return new Promise((resolve, reject) => {
             //check if the connection is open
-            if (this.Sc_Status.open !== true) {
+            if (this._status.open !== true) {
                 reject("[Error: The connection is not open]");
             }
             else {
                 //read from Slave
-                const parser = super.pipe(new ByteLength({ length: this.Sc_Config.frameLenght }));
+                const parser = super.pipe(new ByteLength({ length: this._config.frameLenght }));
                 parser.on('data', data => {
 
                     if (Buffer.compare(slaveKeyRxBuffer, data) === 0) {
@@ -51,7 +51,7 @@ class SerialCommunication extends serialport {
                                 resolve("[Success: write completed]");
                         });
 
-                        this.Sc_Status.connectionEstabilished = true;
+                        this._status.connectionEstabilished = true;
                         resolve(true);
                     }
                     else {
@@ -65,7 +65,7 @@ class SerialCommunication extends serialport {
     writeFrame(masterBuffer) {
         return new Promise((resolve, reject) => {
             //check if the connection is open
-            if (this.Sc_Status.connectionEstabilished !== true){
+            if (this._status.connectionEstabilished !== true){
                 reject("[Error: The connection is not estabilished]");
             }
             else{
@@ -81,9 +81,9 @@ class SerialCommunication extends serialport {
 
     on(eventData, fnCallback) {
         if (eventData === 'frame'){
-            const parser = super.pipe(new ByteLength({ length: this.Sc_Config.frameLenght }));
+            const parser = super.pipe(new ByteLength({ length: this._config.frameLenght }));
             parser.on('data', data => {
-                if (this.Sc_Status.connectionEstabilished === true) {
+                if (this._status.connectionEstabilished === true) {
                     fnCallback(data, "Frame Received:");
                 }
                 else{

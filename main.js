@@ -1,21 +1,21 @@
-const spApi = require('./spApi');
-const frameApi = require('./frameApi');
+const spApi = require('./libraries/spApi');
+const frameApi = require('./libraries/frameApi');
 
 //Key frame from Slave
 const slaveKeyFrameRx = new frameApi.Frame();
-slaveKeyFrameRx.packet = 
+slaveKeyFrameRx.packet =
 {
   slaveFeedbackStatus: 255
 }
 //Key frame to Slave
 const masterKeyFrameTx = new frameApi.Frame();
-masterKeyFrameTx.packet = 
+masterKeyFrameTx.packet =
 {
   seqId: 1,
   slaveFeedbackStatus: 255
 }
 const masterFrame = new frameApi.Frame();
-masterFrame.packet = 
+masterFrame.packet =
 {
   seqId: 1,
   masterCommands: 2,

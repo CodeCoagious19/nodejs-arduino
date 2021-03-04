@@ -56,13 +56,13 @@ class Frame {
     /*Section1*/
     setSeqId(seqId){
         if(seqId != undefined){
-            this._packet.seqId = seqId; 
+            this._packet.seqId = seqId;
         }
     }
     /*Section2*/
     setMasterCommands(masterCommands){
         if(masterCommands != undefined){
-            this._packet.masterCommands = masterCommands; 
+            this._packet.masterCommands = masterCommands;
         }
     }
     setPwmFrequency(pwmFrequency){
@@ -110,7 +110,7 @@ class Frame {
     }
     /*Section2*/
     getMasterCommands(){
-        return this._packet.masterCommands; 
+        return this._packet.masterCommands;
     }
     getPwmFrequency(){
         return this._packet.pwmFrequency;
@@ -138,22 +138,49 @@ class Frame {
     //Metodi avanzati
     assignFromBuffer(buffer) {
         const arr = [...buffer];
-        let index = 0;
-        for (const key in this._packet) {
-            this._packet[key] = arr[index];
-            index++;
-        }
-        return this._packet;
+        /*Section1*/
+        this._packet.seqId = arr[0];
+        /*Section2*/
+        this._packet.masterCommands = arr[1];
+        this._packet.pwmFrequency = (arr[2]<<8) | (arr[3]);
+        this._packet.pwmDutyCicle = arr[4];
+        this._packet.auxOutput = arr[5];
+        /*Section3*/
+        this._packet.slaveFeedbackStatus = arr[6];
+        this._packet.pumpFeedback_ms = (arr[7]<<8) | (arr[8]);
+        this._packet.auxInputFeedback = arr[9];
+        this._packet.auxSlaveError = arr[10];
+
     }
 
     convertToBuffer(){
-        const arr = []; 
-        for (const key in this._packet) {
-            arr.push(this._packet[key])
-        }
+        const arr = [];
+        /*Section1*/
+        arr[0] = this._packet.seqId;
+        /*Section2*/
+        arr[1] = this._packet.masterCommands;
+        arr[2] = this._packet.pwmFrequency >> 8;
+        arr[3] = this._packet.pwmFrequency & 0xFF;
+        arr[4] = this._packet.pwmDutyCicle;
+        arr[5] = this._packet.auxOutput;
+        /*Section3*/
+        arr[6] = this._packet.slaveFeedbackStatus;
+        arr[7] = this._packet.pumpFeedback_ms >> 8;
+        arr[8] = this._packet.pumpFeedback_ms & 0xFF;
+        arr[9] = this._packet.auxInputFeedback;
+        arr[10] = this._packet.auxSlaveError;
         return Buffer.from(arr);
     }
 
 }
+
+/*
+let myFrame = new Frame();
+console.log(myFrame.packet);
+myFrame.assignFromBuffer([112,23,34,45,0,0,0,9,4,23,87]);
+console.log(myFrame.packet);
+console.log(myFrame.convertToBuffer());
+*/
+
 
 module.exports = { Frame: Frame };
