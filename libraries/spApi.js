@@ -62,20 +62,57 @@ class SerialCommunication extends serialport {
         });
     }
 
+    requestForConnection(slaveKeyRxBuffer, masterKeyTxBuffer) {
+        return new Promise((resolve, reject) => {
+            //check if the connection is open
+            if (this._status.open !== true) {
+                reject("[Error: The connection is not open]");
+            }
+            else {
+                console.log('Invio il masterKey ad Arduino..');
+                super.write(masterKeyTxBuffer, err => {
+                    if (err)
+                        reject(err);
+                    else{
+                        console.log('Ho inviato il buffer:');
+                        console.log(masterKeyTxBuffer);
+                        //read from Slave
+                        const parser = super.pipe(new ByteLength({ length: this._config.frameLenght }));
+                        parser.on('data', data => {
+                            if (Buffer.compare(slaveKeyRxBuffer, data) === 0) {
+                                this._status.connectionEstabilished = true;
+                                resolve(true);
+                            }
+                            else {
+                                reject("[Error: The key from arduino is not correct]");
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
     writeFrame(masterBuffer) {
         return new Promise((resolve, reject) => {
             //check if the connection is open
-            if (this._status.connectionEstabilished !== true){
-                reject("[Error: The connection is not estabilished]");
-            }
-            else{
-                super.write(masterBuffer, err => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve("[Success: write completed]");
-                });
-            }
+            // if (this._status.connectionEstabilished !== true){
+            //     reject("[Error: The connection is not estabilished]");
+            // }
+            // else{
+            //     super.write(masterBuffer, err => {
+            //         if (err)
+            //             reject(err);
+            //         else
+            //             resolve("[Success: write completed]");
+            //     });
+            // }
+            super.write(masterBuffer, err => {
+                if (err)
+                    reject(err);
+                else
+                    resolve("[Success: write completed]");
+            });
         });
     }
 

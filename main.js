@@ -1,46 +1,52 @@
 const spApi = require('./libraries/spApi');
 const frameApi = require('./libraries/frameApi');
 
-//Key frame from Slave
-const slaveKeyFrameRx = new frameApi.Frame();
-slaveKeyFrameRx.packet =
-{
-  slaveFeedbackStatus: 255
-}
-//Key frame to Slave
-const masterKeyFrameTx = new frameApi.Frame();
-masterKeyFrameTx.packet =
-{
-  seqId: 1,
-  slaveFeedbackStatus: 255
-}
 const masterFrame = new frameApi.Frame();
 masterFrame.packet =
 {
-  seqId: 1,
-  masterCommands: 2,
-  pwmFrequency: 3,
-  pwmDutyCicle: 4,
+  seqId: 0,
+  masterCommands: 10,
+  pwmFrequency: 500,
+  pwmDutyCicle: 127,
   auxOutput: 5,
-  slaveFeedbackStatus: 6,
-  pumpFeedback_ms: 7,
-  auxInputFeedback: 8,
-  auxSlaveError: 9,
+  slaveStatus: 0,
+  pumpFeedback_ms: 0,
+  auxInput: 0,
+  auxSlaveError: 0,
 }
 
+const slaveFrame = new frameApi.Frame();
+
 let serialCommunication = new spApi.SerialCommunication({
-  port: 'COM5',
+  port: 'COM3',
   baudRate: 115200,
-  frameLenght: 9
+  frameLenght: 11
 });
 
 serialCommunication.on('frame', (buffer, description) => {
-  frameReceived = new frameApi.Frame();
-  frameReceived.assignFromBuffer(buffer);
+  slaveFrame.assignFromBuffer(buffer);
+  masterFrame.assignFromBuffer(buffer);
+
+  /*
   console.log("\n--------------------------");
   console.log(description);
-  console.log(frameReceived.packet);
+  console.log(slaveFrame.packet);
   console.log("--------------------------\n");
+  */
+
+  console.clear();
+  console.log("\n---");
+  console.log(slaveFrame.packet.seqId);
+  console.log(slaveFrame.packet.masterCommands);
+  console.log(slaveFrame.packet.pwmFrequency);
+  console.log(slaveFrame.packet.pwmDutyCicle);
+  console.log(slaveFrame.packet.slaveStatus);
+  console.log(slaveFrame.packet.pumpFeedback_ms);
+  console.log(slaveFrame.packet.auxOutput);
+  console.log(slaveFrame.packet.auxInput);
+  console.log(slaveFrame.packet.auxSlaveError);
+  console.log("---\n");
+  write();
 });
 
 function wait(time) {
@@ -51,14 +57,28 @@ function wait(time) {
   });
 }
 
+let command = true;
+
+let write = async () => {
+  if(command){
+    masterFrame.setMasterCommands(10);
+    command = false;
+  }
+  else{
+    masterFrame.setMasterCommands(20);
+    command = true;
+  }
+  let seqId = masterFrame.getSeqId();
+  masterFrame.setSeqId(++seqId);
+  await serialCommunication.writeFrame(masterFrame.convertToBuffer());
+}
+
 let main = async () => {
 
   console.log('start');
   console.log('attendi 1 sec..');
   await wait(1000);
 
-  //Apro una connessione verso Arduino
-  //Questa operazione eseguirà il reset fisico della board
   console.log('Apro una connessione con Arduino...');
   console.log('Arduino si riavvia...');
   try {
@@ -67,19 +87,12 @@ let main = async () => {
     console.log(error);
   }
 
-  //Tento di stabilire una connessione con Arduino
-  try {
-    console.log('Attendo il key frame da Arduino..');
-    await serialCommunication.waitForConnection(slaveKeyFrameRx.convertToBuffer(), masterKeyFrameTx.convertToBuffer());
-    console.log("Il key frame ricevuto da Arduino è corretto.");
-    console.log("Invio il key frame per l'autenticazione da parte di Aduino..");
-    console.log("Connessione con Arduino stabilita con Successo!");
-  } catch (error) {
-    console.log(error);
-  }
+  console.log('attendi 5 sec..');
+  await wait(5000);
+
   try {
     console.log("Invio un frame generico ad Arduino..");
-    await serialCommunication.writeFrame(masterFrame.convertToBuffer());
+    write();
     console.log("Frame trasmesso con successo!");
   } catch (error) {
     console.log(error);

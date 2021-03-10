@@ -9,9 +9,9 @@ class Frame {
             pwmDutyCicle: 0,
             auxOutput: 0,
             /*Section3*/
-            slaveFeedbackStatus: 0,
+            slaveStatus: 0,
             pumpFeedback_ms: 0,
-            auxInputFeedback: 0,
+            auxInput: 0,
             auxSlaveError: 0
         }
     }
@@ -25,9 +25,9 @@ class Frame {
         pwmDutyCicle: pwmDutyCicle,
         auxOutput: auxOutput,
         /*Section3*/
-        slaveFeedbackStatus: slaveFeedbackStatus,
+        slaveStatus: slaveStatus,
         pumpFeedback_ms: pumpFeedback_ms,
-        auxInputFeedback: auxInputFeedback,
+        auxInput: auxInput,
         auxSlaveError: auxSlaveError
 
     }){
@@ -39,9 +39,9 @@ class Frame {
         this.setPwmDutyCicle(packet.pwmDutyCicle);
         this.setAuxOutput(packet.auxOutput);
         /*Section3*/
-        this.setSlaveFeedbackStatus(packet.slaveFeedbackStatus);
+        this.setSlaveStatus(packet.slaveStatus);
         this.setPumpFeedback_ms(packet.pumpFeedback_ms);
-        this.setAuxInputFeedback(packet.auxInputFeedback);
+        this.setAuxInput(packet.auxInput);
         this.setAuxSlaveError(packet.auxSlaveError);
     }
 
@@ -81,9 +81,9 @@ class Frame {
         }
     }
     /*Section2*/
-    setSlaveFeedbackStatus(slaveFeedbackStatus){
-        if (slaveFeedbackStatus != undefined){
-            this._packet.slaveFeedbackStatus = slaveFeedbackStatus;
+    setSlaveStatus(slaveStatus){
+        if (slaveStatus != undefined){
+            this._packet.slaveStatus = slaveStatus;
         }
     }
     setPumpFeedback_ms(pumpFeedback_ms){
@@ -91,9 +91,9 @@ class Frame {
             this._packet.pumpFeedback_ms = pumpFeedback_ms;
         }
     }
-    setAuxInputFeedback(auxInputFeedback){
-        if(auxInputFeedback != undefined){
-            this._packet.auxInputFeedback = auxInputFeedback;
+    setAuxInput(auxInput){
+        if(auxInput != undefined){
+            this._packet.auxInput = auxInput;
         }
     }
     setAuxSlaveError(auxSlaveError){
@@ -122,14 +122,14 @@ class Frame {
         return this._packet.auxOutput;
     }
     /*Section2*/
-    getSlaveFeedbackStatus(){
-        return this._packet.slaveFeedbackStatus;
+    getSlaveStatus(){
+        return this._packet.slaveStatus;
     }
     getPumpFeedback_ms(){
         return this._packet.pumpFeedback_ms;
     }
-    getAuxInputFeedback(){
-        return this._packet.auxInputFeedback;
+    getAuxInput(){
+        return this._packet.auxInput;
     }
     getAuxSlaveError(){
         return this._packet.auxSlaveError;
@@ -146,9 +146,9 @@ class Frame {
         this._packet.pwmDutyCicle = arr[4];
         this._packet.auxOutput = arr[5];
         /*Section3*/
-        this._packet.slaveFeedbackStatus = arr[6];
+        this._packet.slaveStatus = arr[6];
         this._packet.pumpFeedback_ms = (arr[7]<<8) | (arr[8]);
-        this._packet.auxInputFeedback = arr[9];
+        this._packet.auxInput = arr[9];
         this._packet.auxSlaveError = arr[10];
 
     }
@@ -164,23 +164,14 @@ class Frame {
         arr[4] = this._packet.pwmDutyCicle;
         arr[5] = this._packet.auxOutput;
         /*Section3*/
-        arr[6] = this._packet.slaveFeedbackStatus;
+        arr[6] = this._packet.slaveStatus;
         arr[7] = this._packet.pumpFeedback_ms >> 8;
         arr[8] = this._packet.pumpFeedback_ms & 0xFF;
-        arr[9] = this._packet.auxInputFeedback;
+        arr[9] = this._packet.auxInput;
         arr[10] = this._packet.auxSlaveError;
         return Buffer.from(arr);
     }
 
 }
-
-/*
-let myFrame = new Frame();
-console.log(myFrame.packet);
-myFrame.assignFromBuffer([112,23,34,45,0,0,0,9,4,23,87]);
-console.log(myFrame.packet);
-console.log(myFrame.convertToBuffer());
-*/
-
 
 module.exports = { Frame: Frame };
