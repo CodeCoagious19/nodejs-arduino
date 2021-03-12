@@ -1,54 +1,58 @@
+/*==================================================================================================
+  Requires
+==================================================================================================*/
 const spApi = require('./libraries/spApi');
 const frameApi = require('./libraries/frameApi');
 
-const masterFrame = new frameApi.Frame();
+/*==================================================================================================
+  Global variables
+==================================================================================================*/
+const masterFrame = new frameApi.FrameMaster();
+const slaveFrame = new frameApi.FrameSlave();
+
 masterFrame.packet =
 {
   seqId: 0,
-  masterCommands: 10,
+  masterCommands: 17,
   pwmFrequency: 500,
   pwmDutyCicle: 127,
-  auxOutput: 5,
-  slaveStatus: 0,
-  pumpFeedback_ms: 0,
-  auxInput: 0,
-  auxSlaveError: 0,
+  auxOutput: 5
 }
 
-const slaveFrame = new frameApi.Frame();
-
-let serialCommunication = new spApi.SerialCommunication({
+const serialCommunication = new spApi.SerialCommunication({
   port: 'COM3',
   baudRate: 115200,
-  frameLenght: 11
+  frameLenght: 6
 });
 
+/*==================================================================================================
+  Events
+==================================================================================================*/
 serialCommunication.on('frame', (buffer, description) => {
   slaveFrame.assignFromBuffer(buffer);
-  masterFrame.assignFromBuffer(buffer);
 
-  /*
-  console.log("\n--------------------------");
-  console.log(description);
-  console.log(slaveFrame.packet);
-  console.log("--------------------------\n");
-  */
+  const time = new Date();
+  const arr_time = [time.getMinutes(), time.getSeconds(), time.getMilliseconds()];
 
-  console.clear();
   console.log("\n---");
-  console.log(slaveFrame.packet.seqId);
-  console.log(slaveFrame.packet.masterCommands);
-  console.log(slaveFrame.packet.pwmFrequency);
-  console.log(slaveFrame.packet.pwmDutyCicle);
-  console.log(slaveFrame.packet.slaveStatus);
-  console.log(slaveFrame.packet.pumpFeedback_ms);
-  console.log(slaveFrame.packet.auxOutput);
-  console.log(slaveFrame.packet.auxInput);
-  console.log(slaveFrame.packet.auxSlaveError);
+  console.log(`${arr_time[0]}.${arr_time[1]}.${arr_time[2]}`);
+  console.log(`seqId: ${masterFrame.packet.seqId}`);
+  console.log(`mCommands: ${masterFrame.packet.masterCommands}`);
+  console.log(`pwmF: ${masterFrame.packet.pwmFrequency}`);
+  console.log(`pwmDC: ${masterFrame.packet.pwmDutyCicle}`);
+  console.log(`O: ${masterFrame.packet.auxOutput}`);
+  console.log(`seqId: ${slaveFrame.packet.seqId}`);
+  console.log(`sStatus: ${slaveFrame.packet.slaveStatus}`);
+  console.log(`f_ms: ${slaveFrame.packet.pumpFeedback_ms}`);
+  console.log(`I: ${slaveFrame.packet.auxInput}`);
+  console.log(`sErr: ${slaveFrame.packet.auxSlaveError}`);
   console.log("---\n");
   write();
 });
 
+/*==================================================================================================
+  Functions
+==================================================================================================*/
 function wait(time) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -57,19 +61,24 @@ function wait(time) {
   });
 }
 
-let command = true;
+let counter = 0;
+let first = true;
+let commandArr = [1,16];
+let index = 0;
 
 let write = async () => {
-  if(command){
-    masterFrame.setMasterCommands(10);
-    command = false;
+  counter++;
+  if (counter >= 20){
+    masterFrame.setMasterCommands(commandArr[index++]);
+    index = (index == 2)? 0: index;
+    counter = 0;
   }
   else{
-    masterFrame.setMasterCommands(20);
-    command = true;
+    if (slaveFrame.packet.slaveStatus != 0) {
+      masterFrame.setMasterCommands(0);
+    }
   }
-  let seqId = masterFrame.getSeqId();
-  masterFrame.setSeqId(++seqId);
+  masterFrame.setSeqId(slaveFrame.getSeqId() + 1);
   await serialCommunication.writeFrame(masterFrame.convertToBuffer());
 }
 
@@ -87,8 +96,8 @@ let main = async () => {
     console.log(error);
   }
 
-  console.log('attendi 5 sec..');
-  await wait(5000);
+   console.log('attendi 1 sec..');
+   await wait(1000);
 
   try {
     console.log("Invio un frame generico ad Arduino..");
