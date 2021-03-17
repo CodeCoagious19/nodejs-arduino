@@ -1,7 +1,5 @@
 const usbDetect = require('usb-detection');
-const serialport = require("serialport");
 
-const spList = serialport.list();
 usbDetect.startMonitoring();
 /*
 // Detect add/insert

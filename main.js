@@ -3,21 +3,14 @@
 ==================================================================================================*/
 const spApi = require('./libraries/spApi');
 const frameApi = require('./libraries/frameApi');
+const fs = require('fs');
 
+var commandSend = false;
 /*==================================================================================================
   Global variables
 ==================================================================================================*/
 const masterFrame = new frameApi.FrameMaster();
 const slaveFrame = new frameApi.FrameSlave();
-
-masterFrame.packet =
-{
-  seqId: 0,
-  masterCommands: 17,
-  pwmFrequency: 500,
-  pwmDutyCicle: 127,
-  auxOutput: 5
-}
 
 const serialCommunication = new spApi.SerialCommunication({
   port: 'COM3',
@@ -25,29 +18,38 @@ const serialCommunication = new spApi.SerialCommunication({
   frameLenght: 6
 });
 
+masterFrame.pwmFrequency = 100;
+masterFrame.pwmDutyCicle = 0;
+deltaDutyCicle = 10;
+
 /*==================================================================================================
   Events
 ==================================================================================================*/
 serialCommunication.on('frame', (buffer, description) => {
+
   slaveFrame.assignFromBuffer(buffer);
 
   const time = new Date();
-  const arr_time = [time.getMinutes(), time.getSeconds(), time.getMilliseconds()];
 
-  console.log("\n---");
-  console.log(`${arr_time[0]}.${arr_time[1]}.${arr_time[2]}`);
-  console.log(`seqId: ${masterFrame.packet.seqId}`);
-  console.log(`mCommands: ${masterFrame.packet.masterCommands}`);
-  console.log(`pwmF: ${masterFrame.packet.pwmFrequency}`);
-  console.log(`pwmDC: ${masterFrame.packet.pwmDutyCicle}`);
-  console.log(`O: ${masterFrame.packet.auxOutput}`);
-  console.log(`seqId: ${slaveFrame.packet.seqId}`);
-  console.log(`sStatus: ${slaveFrame.packet.slaveStatus}`);
-  console.log(`f_ms: ${slaveFrame.packet.pumpFeedback_ms}`);
-  console.log(`I: ${slaveFrame.packet.auxInput}`);
-  console.log(`sErr: ${slaveFrame.packet.auxSlaveError}`);
-  console.log("---\n");
-  write();
+const str =
+`*******
+t:${time.getMinutes()}:${time.getSeconds()}:${time.getMilliseconds()}
+-
+M.id:${(commandSend == true)?  masterFrame.seqId : "---"}
+M.c:${(commandSend == true)?  masterFrame.masterCommands : "---"}
+M.f:${(commandSend == true)?  masterFrame.pwmFrequency : "---"}
+M.dc:${(commandSend == true)?  masterFrame.pwmDutyCicle : "---"}
+M.o:${(commandSend == true)?  masterFrame.auxOutput : "---"}
+-
+S.id:${slaveFrame.seqId}
+S.st:${slaveFrame.slaveStatus}
+S.f_ms:${slaveFrame.pumpFeedback_ms}
+S.i:${slaveFrame.auxInput}
+S.i:${slaveFrame.auxSlaveError}`
+
+  console.log(str);
+
+  commandSend = false;
 });
 
 /*==================================================================================================
@@ -61,25 +63,25 @@ function wait(time) {
   });
 }
 
-let counter = 0;
-let first = true;
-let commandArr = [1,16];
-let index = 0;
-
 let write = async () => {
-  counter++;
-  if (counter >= 20){
-    masterFrame.setMasterCommands(commandArr[index++]);
-    index = (index == 2)? 0: index;
-    counter = 0;
+
+  if (slaveFrame.slaveStatus == 17) {
+    masterFrame.masterCommands = 0;
   }
   else{
-    if (slaveFrame.packet.slaveStatus != 0) {
-      masterFrame.setMasterCommands(0);
+    masterFrame.masterCommands = 17;
+    masterFrame.auxOutput++;
+    if (masterFrame.pwmDutyCicle >= 75) {
+      deltaDutyCicle = -10;
     }
+    else if (masterFrame.pwmDutyCicle <= 15) {
+      deltaDutyCicle = 10;
+    }
+    masterFrame.pwmDutyCicle += deltaDutyCicle;
   }
-  masterFrame.setSeqId(slaveFrame.getSeqId() + 1);
+  masterFrame.incSeqId();
   await serialCommunication.writeFrame(masterFrame.convertToBuffer());
+  commandSend = true;
 }
 
 let main = async () => {
@@ -96,12 +98,18 @@ let main = async () => {
     console.log(error);
   }
 
+  try {
+    await serialCommunication.clearData();
+  } catch (error) {
+    console.log(error);
+  }
+
    console.log('attendi 1 sec..');
    await wait(1000);
 
   try {
     console.log("Invio un frame generico ad Arduino..");
-    write();
+    setInterval(write, 2000);
     console.log("Frame trasmesso con successo!");
   } catch (error) {
     console.log(error);

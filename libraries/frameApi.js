@@ -1,23 +1,27 @@
 class Frame {
     constructor() {
-        this._packet = {
-            /*Section1*/
-            seqId: 0,
-            /*Section2*/
-            masterCommands: 0,
-            pwmFrequency: 0,
-            pwmDutyCicle: 0,
-            auxOutput: 0,
-            /*Section3*/
-            slaveStatus: 0,
-            pumpFeedback_ms: 0,
-            auxInput: 0,
-            auxSlaveError: 0
-        }
+
+        /*_____________________________________________*/
+        /*Section1*/
+        this._seqId = 0;
+        /*Section2*/
+        this._masterCommands = 0;
+        this._pwmFrequency = 0;
+        this._pwmDutyCicle = 0;
+        this._auxOutput = 0;
+        /*Section3*/
+        this._slaveStatus = 0;
+        this._pumpFeedback_ms = 0;
+        this._auxInput = 0;
+        this._auxSlaveError = 0;
+
+        /*_____________________________________________*/
         this._error = {
             onFrameReceived: 1,
             onFrameReceived: 2
         }
+
+        /*_____________________________________________*/
         this._masterCommand = {
             startPwm: 1,
             stopPwm: 2,
@@ -27,224 +31,171 @@ class Frame {
         }
     }
 
-    set packet(packet = {
-        /*Section1*/
-        seqId: seqId,
-        /*Section2*/
-        masterCommands: masterCommands,
-        pwmFrequency: pwmFrequency,
-        pwmDutyCicle: pwmDutyCicle,
-        auxOutput: auxOutput,
-        /*Section3*/
-        slaveStatus: slaveStatus,
-        pumpFeedback_ms: pumpFeedback_ms,
-        auxInput: auxInput,
-        auxSlaveError: auxSlaveError
-
-    }){
-        /*Section1*/
-        this.setSeqId(packet.seqId);
-        /*Section2*/
-        this.setMasterCommands(packet.masterCommands);
-        this.setPwmFrequency(packet.pwmFrequency);
-        this.setPwmDutyCicle(packet.pwmDutyCicle);
-        this.setAuxOutput(packet.auxOutput);
-        /*Section3*/
-        this.setSlaveStatus(packet.slaveStatus);
-        this.setPumpFeedback_ms(packet.pumpFeedback_ms);
-        this.setAuxInput(packet.auxInput);
-        this.setAuxSlaveError(packet.auxSlaveError);
-    }
-
-    get packet(){
-        return this._packet;
-    }
-
-    //Metodi get/set delle singole proprietà
-
+    /*_____________________________________________*/
     //SET
 
     /*Section1*/
-    setSeqId(seqId){
-        if(seqId != undefined){
-            this._packet.seqId = seqId;
-        }
+    set seqId(seqId){
+        this._seqId = seqId;
     }
     /*Section2*/
-    setMasterCommands(masterCommands){
-        if(masterCommands != undefined){
-            this._packet.masterCommands = masterCommands;
-        }
+    set masterCommands(masterCommands){
+        this._masterCommands = masterCommands;
     }
-    setPwmFrequency(pwmFrequency){
-        if(pwmFrequency != undefined){
-            this._packet.pwmFrequency = pwmFrequency;
-        }
+    set pwmFrequency(pwmFrequency){
+        this._pwmFrequency = pwmFrequency;
     }
-    setPwmDutyCicle(pwmDutyCicle){
-        if(pwmDutyCicle != undefined){
-            this._packet.pwmDutyCicle = pwmDutyCicle;
-        }
+    set pwmDutyCicle(pwmDutyCicle){
+        this._pwmDutyCicle = pwmDutyCicle;
     }
-    setAuxOutput(auxOutput){
-        if(auxOutput != undefined){
-            this._packet.auxOutput = auxOutput;
-        }
+    set auxOutput(auxOutput){
+        this._auxOutput = auxOutput;
     }
-    /*Section2*/
-    setSlaveStatus(slaveStatus){
-        if (slaveStatus != undefined){
-            this._packet.slaveStatus = slaveStatus;
-        }
+    /*Section3*/
+    set slaveStatus(slaveStatus){
+        this._slaveStatus = slaveStatus;
     }
-    setPumpFeedback_ms(pumpFeedback_ms){
-        if(pumpFeedback_ms != undefined){
-            this._packet.pumpFeedback_ms = pumpFeedback_ms;
-        }
+    set pumpFeedback_ms(pumpFeedback_ms){
+        this._pumpFeedback_ms = pumpFeedback_ms;
     }
-    setAuxInput(auxInput){
-        if(auxInput != undefined){
-            this._packet.auxInput = auxInput;
-        }
+    set auxInput(auxInput){
+        this._auxInput = auxInput;
     }
-    setAuxSlaveError(auxSlaveError){
-        if(auxSlaveError != undefined){
-            this._packet.auxSlaveError = auxSlaveError;
-        }
+    set auxSlaveError(auxSlaveError){
+        this._auxSlaveError = auxSlaveError;
     }
 
+    /*_____________________________________________*/
     //GET
 
     /*Section1*/
-    getSeqId(){
-        return this._packet.seqId;
+    get seqId(){
+        return this._seqId;
     }
     /*Section2*/
-    getMasterCommands(){
-        return this._packet.masterCommands;
+    get masterCommands(){
+        return this._masterCommands;
     }
-    getPwmFrequency(){
-        return this._packet.pwmFrequency;
+    get pwmFrequency(){
+        return this._pwmFrequency;
     }
-    getPwmDutyCicle(){
-        return this._packet.pwmDutyCicle;
+    get pwmDutyCicle(){
+        return this._pwmDutyCicle;
     }
-    getAuxOutput(){
-        return this._packet.auxOutput;
+    get auxOutput(){
+        return this._auxOutput;
     }
-    /*Section2*/
-    getSlaveStatus(){
-        return this._packet.slaveStatus;
+    /*Section3*/
+    get slaveStatus(){
+        return this._slaveStatus;
     }
-    getPumpFeedback_ms(){
-        return this._packet.pumpFeedback_ms;
+    get pumpFeedback_ms(){
+        return this._pumpFeedback_ms;
     }
-    getAuxInput(){
-        return this._packet.auxInput;
+    get auxInput(){
+        return this._auxInput;
     }
-    getAuxSlaveError(){
-        return this._packet.auxSlaveError;
+    get auxSlaveError(){
+        return this._auxSlaveError;
     }
 
-    //Metodi avanzati
-
-    //new
+    /*_____________________________________________*/
     clear(){
-        this._packet = {
-            /*Section1*/
-            seqId: 0,
-            /*Section2*/
-            masterCommands: 0,
-            pwmFrequency: 0,
-            pwmDutyCicle: 0,
-            auxOutput: 0,
-            /*Section3*/
-            slaveStatus: 0,
-            pumpFeedback_ms: 0,
-            auxInput: 0,
-            auxSlaveError: 0
-        } 
+        /*Section1*/
+        this._seqId = 0;
+        /*Section2*/
+        this._masterCommands = 0;
+        this._pwmFrequency = 0;
+        this._pwmDutyCicle = 0;
+        this._auxOutput = 0;
+        /*Section3*/
+        this._slaveStatus = 0;
+        this._pumpFeedback_ms = 0;
+        this._auxInput = 0;
+        this._auxSlaveError = 0;
     }
 
+    /*_____________________________________________*/
     assignFromBuffer(buffer) {
         const arr = [...buffer];
         /*Section1*/
-        this._packet.seqId = arr[0];
+        this._seqId = arr[0];
         /*Section2*/
-        this._packet.masterCommands = arr[1];
-        this._packet.pwmFrequency = (arr[2]<<8) | (arr[3]);
-        this._packet.pwmDutyCicle = arr[4];
-        this._packet.auxOutput = arr[5];
+        this._masterCommands = arr[1];
+        this._pwmFrequency = (arr[2]<<8) | (arr[3]);
+        this._pwmDutyCicle = arr[4];
+        this._auxOutput = arr[5];
         /*Section3*/
-        this._packet.slaveStatus = arr[6];
-        this._packet.pumpFeedback_ms = (arr[7]<<8) | (arr[8]);
-        this._packet.auxInput = arr[9];
-        this._packet.auxSlaveError = arr[10];
-
+        this._slaveStatus = arr[6];
+        this._pumpFeedback_ms = (arr[7]<<8) | (arr[8]);
+        this._auxInput = arr[9];
+        this._auxSlaveError = arr[10];
     }
 
+    /*_____________________________________________*/
     convertToBuffer(){
         const arr = [];
         /*Section1*/
-        arr[0] = this._packet.seqId;
+        arr[0] = this._seqId;
         /*Section2*/
-        arr[1] = this._packet.masterCommands;
-        arr[2] = this._packet.pwmFrequency >> 8;
-        arr[3] = this._packet.pwmFrequency & 0xFF;
-        arr[4] = this._packet.pwmDutyCicle;
-        arr[5] = this._packet.auxOutput;
+        arr[1] = this._masterCommands;
+        arr[2] = this._pwmFrequency >> 8;
+        arr[3] = this._pwmFrequency & 0xFF;
+        arr[4] = this._pwmDutyCicle;
+        arr[5] = this._auxOutput;
         /*Section3*/
-        arr[6] = this._packet.slaveStatus;
-        arr[7] = this._packet.pumpFeedback_ms >> 8;
-        arr[8] = this._packet.pumpFeedback_ms & 0xFF;
-        arr[9] = this._packet.auxInput;
-        arr[10] = this._packet.auxSlaveError;
+        arr[6] = this._slaveStatus;
+        arr[7] = this._pumpFeedback_ms >> 8;
+        arr[8] = this._pumpFeedback_ms & 0xFF;
+        arr[9] = this._auxInput;
+        arr[10] = this._auxSlaveError;
         return Buffer.from(arr);
     }
 
-    //new
+    /*_____________________________________________*/
     incSeqId(seqId){
-        if(seqId != undefined){
-            this._packet.seqId++;
+        this._seqId++;
+        if (this._seqId >= 256) {
+            this._seqId = 0;
         }
     }
 
+    /*_____________________________________________*/
     addMasterCommand(masterCommands){
-        if(masterCommands != undefined){
-            this._packet.masterCommands |= (masterCommands & 0xFF);
-        }
+        this._masterCommands |= (masterCommands & 0xFF);
     }
 
+    /*_____________________________________________*/
     clearMasterCommand(masterCommands){
-        if(masterCommands != undefined){
-            this._packet.masterCommands &= ( (~masterCommands) & 0xFF);
-        }
+        this._masterCommands &= ( (~masterCommands) & 0xFF);
     }
 
+    /*_____________________________________________*/
     isAuxSlaveError(auxSlaveError){
-        const testMask = (auxSlaveError & 0xFF) & _frame.auxSlaveError;
+        const testMask = (auxSlaveError & 0xFF) & this._auxSlaveError;
         return (testMask == 0x00) ? false : true;
     }
-
-
 }
 
 /*______________________________________________________________________________________________________________________________*/
 class FrameMaster {
     constructor() {
-        this._packet = {
-            /*Section1*/
-            seqId: 0,
-            /*Section2*/
-            masterCommands: 0,
-            pwmFrequency: 0,
-            pwmDutyCicle: 0,
-            auxOutput: 0,
-        }
+        /*_____________________________________________*/
+        /*Section1*/
+        this._seqId= 0;
+        /*Section2*/
+        this._masterCommands= 0;
+        this._pwmFrequency= 0;
+        this._pwmDutyCicle= 0;
+        this._auxOutput= 0;
+
+        /*_____________________________________________*/
         this._error = {
             onFrameReceived: 1,
             onFrameReceived: 2
         }
+
+        /*_____________________________________________*/
         this._masterCommand = {
             startPwm: 1,
             stopPwm: 2,
@@ -254,153 +205,124 @@ class FrameMaster {
         }
     }
 
-    set packet(packet = {
-        /*Section1*/
-        seqId: seqId,
-        /*Section2*/
-        masterCommands: masterCommands,
-        pwmFrequency: pwmFrequency,
-        pwmDutyCicle: pwmDutyCicle,
-        auxOutput: auxOutput,
+    /*_____________________________________________*/
+    //SET
 
-    }){
-        /*Section1*/
-        this.setSeqId(packet.seqId);
-        /*Section2*/
-        this.setMasterCommands(packet.masterCommands);
-        this.setPwmFrequency(packet.pwmFrequency);
-        this.setPwmDutyCicle(packet.pwmDutyCicle);
-        this.setAuxOutput(packet.auxOutput);
+    /*Section1*/
+    set seqId(seqId){
+        this._seqId = seqId & 0xFF;
     }
-
-    get packet(){
-        return this._packet;
+    /*Section2*/
+    set masterCommands(masterCommands){
+        this._masterCommands = masterCommands & 0xFF;
+    }
+    set pwmFrequency(pwmFrequency){
+        this._pwmFrequency = pwmFrequency & 0xFFFF;
+    }
+    set pwmDutyCicle(pwmDutyCicle){
+        this._pwmDutyCicle = Math.round(pwmDutyCicle * 2.55) & 0xFF ;
+    }
+    set auxOutput(auxOutput){
+        this._auxOutput = auxOutput & 0xFF;
     }
 
     /*_____________________________________________*/
     //SET
 
     /*Section1*/
-    setSeqId(seqId){
-        if(seqId != undefined){
-            this._packet.seqId = seqId;
-        }
+    get seqId(){
+        return this._seqId;
     }
     /*Section2*/
-    setMasterCommands(masterCommands){
-        if(masterCommands != undefined){
-            this._packet.masterCommands = masterCommands;
-        }
+    get masterCommands(){
+        return this._masterCommands;
     }
-    setPwmFrequency(pwmFrequency){
-        if(pwmFrequency != undefined){
-            this._packet.pwmFrequency = pwmFrequency;
-        }
+    get pwmFrequency(){
+        return this._pwmFrequency;
     }
-    setPwmDutyCicle(pwmDutyCicle){
-        if(pwmDutyCicle != undefined){
-            this._packet.pwmDutyCicle = pwmDutyCicle;
-        }
+    get pwmDutyCicle(){
+        return Math.round(this._pwmDutyCicle/2.55);
     }
-    setAuxOutput(auxOutput){
-        if(auxOutput != undefined){
-            this._packet.auxOutput = auxOutput;
-        }
+    get auxOutput(){
+        return this._auxOutput;
     }
 
     /*_____________________________________________*/
-    //GET
-
-    /*Section1*/
-    getSeqId(){
-        return this._packet.seqId;
-    }
-    /*Section2*/
-    getMasterCommands(){
-        return this._packet.masterCommands;
-    }
-    getPwmFrequency(){
-        return this._packet.pwmFrequency;
-    }
-    getPwmDutyCicle(){
-        return this._packet.pwmDutyCicle;
-    }
-    getAuxOutput(){
-        return this._packet.auxOutput;
-    }
-
-    /*_____________________________________________*/
-    //Advanced methods
-
     clear(){
-        this._packet = {
-            /*Section1*/
-            seqId: 0,
-            /*Section2*/
-            masterCommands: 0,
-            pwmFrequency: 0,
-            pwmDutyCicle: 0,
-            auxOutput: 0,
-        } 
+        /*Section1*/
+        this._seqId= 0;
+        /*Section2*/
+        this._masterCommands= 0;
+        this._pwmFrequency= 0;
+        this._pwmDutyCicle= 0;
+        this._auxOutput= 0;
     }
 
+    /*_____________________________________________*/
     assignFromBuffer(buffer) {
         const arr = [...buffer];
         /*Section1*/
-        this._packet.seqId = arr[0];
+        this._seqId = arr[0];
         /*Section2*/
-        this._packet.masterCommands = arr[1];
-        this._packet.pwmFrequency = (arr[2]<<8) | (arr[3]);
-        this._packet.pwmDutyCicle = arr[4];
-        this._packet.auxOutput = arr[5];
+        this._masterCommands = arr[1];
+        this._pwmFrequency = (arr[2]<<8) | (arr[3]);
+        this._pwmDutyCicle = arr[4];
+        this._auxOutput = arr[5];
     }
 
+    /*_____________________________________________*/
     convertToBuffer(){
         const arr = [];
         /*Section1*/
-        arr[0] = this._packet.seqId;
+        arr[0] = this._seqId;
         /*Section2*/
-        arr[1] = this._packet.masterCommands;
-        arr[2] = this._packet.pwmFrequency >> 8;
-        arr[3] = this._packet.pwmFrequency & 0xFF;
-        arr[4] = this._packet.pwmDutyCicle;
-        arr[5] = this._packet.auxOutput;
+        arr[1] = this._masterCommands;
+        arr[2] = this._pwmFrequency >> 8;
+        arr[3] = this._pwmFrequency & 0xFF;
+        arr[4] = this._pwmDutyCicle;
+        arr[5] = this._auxOutput;
         return Buffer.from(arr);
     }
 
-    incSeqId(seqId){
-        if(seqId != undefined){
-            this._packet.seqId++;
+    /*_____________________________________________*/
+    incSeqId(){
+        this._seqId++;
+        if (this._seqId >= 256) {
+            this._seqId = 0;
         }
     }
+
+    /*_____________________________________________*/
     addMasterCommand(masterCommands){
-        if(masterCommands != undefined){
-            this._packet.masterCommands |= (masterCommands & 0xFF);
-        }
+        this._masterCommands |= (masterCommands & 0xFF);
     }
+
+    /*_____________________________________________*/
     clearMasterCommand(masterCommands){
-        if(masterCommands != undefined){
-            this._packet.masterCommands &= ( (~masterCommands) & 0xFF);
-        }
+        this._masterCommands &= ( (~masterCommands) & 0xFF);
     }
 }
 
 /*______________________________________________________________________________________________________________________________*/
 class FrameSlave {
     constructor() {
-        this._packet = {
-            /*Section1*/
-            seqId: 0,
-            /*Section3*/
-            slaveStatus: 0,
-            pumpFeedback_ms: 0,
-            auxInput: 0,
-            auxSlaveError: 0
-        }
+
+        /*_____________________________________________*/
+        /*Section1*/
+        this._seqId= 0;
+        /*Section3*/
+        this._slaveStatus= 0;
+        this._pumpFeedback_ms= 0;
+        this._auxInput= 0;
+        this._auxSlaveError= 0;
+
+        /*_____________________________________________*/
         this._error = {
             onFrameReceived: 1,
             onFrameReceived: 2
         }
+
+        /*_____________________________________________*/
         this._masterCommand = {
             startPwm: 1,
             stopPwm: 2,
@@ -413,139 +335,90 @@ class FrameSlave {
     /*_____________________________________________*/
     //SET
 
-    set packet(packet = {
-        /*Section1*/
-        seqId: seqId,
-        /*Section3*/
-        slaveStatus: slaveStatus,
-        pumpFeedback_ms: pumpFeedback_ms,
-        auxInput: auxInput,
-        auxSlaveError: auxSlaveError
-
-    }){
-        /*Section1*/
-        this.setSeqId(packet.seqId);
-        /*Section3*/
-        this.setSlaveStatus(packet.slaveStatus);
-        this.setPumpFeedback_ms(packet.pumpFeedback_ms);
-        this.setAuxInput(packet.auxInput);
-        this.setAuxSlaveError(packet.auxSlaveError);
-    }
-
     /*Section1*/
-    setSeqId(seqId){
-        if(seqId != undefined){
-            this._packet.seqId = seqId;
-        }
+    set seqId(seqId){
+        this._seqId = seqId & 0xFF;
     }
-    /*Section3*/
-    setSlaveStatus(slaveStatus){
-        if (slaveStatus != undefined){
-            this._packet.slaveStatus = slaveStatus;
-        }
+    /*Section2*/
+    set slaveStatus(slaveStatus){
+        this._slaveStatus = slaveStatus & 0xFF;
     }
-    setPumpFeedback_ms(pumpFeedback_ms){
-        if(pumpFeedback_ms != undefined){
-            this._packet.pumpFeedback_ms = pumpFeedback_ms;
-        }
+    set pumpFeedback_ms(pumpFeedback_ms){
+        this._pumpFeedback_ms = pumpFeedback_ms & 0xFFFF;
     }
-    setAuxInput(auxInput){
-        if(auxInput != undefined){
-            this._packet.auxInput = auxInput;
-        }
+    set auxInput(auxInput){
+        this._auxInput = auxInput & 0xFF;
     }
-    setAuxSlaveError(auxSlaveError){
-        if(auxSlaveError != undefined){
-            this._packet.auxSlaveError = auxSlaveError;
-        }
+    set auxSlaveError(auxSlaveError){
+        this._auxSlaveError = auxSlaveError & 0xFF;
     }
 
     /*_____________________________________________*/
     //GET
 
-    get packet(){
-        return this._packet;
-    }
-
     /*Section1*/
-    getSeqId(){
-        return this._packet.seqId;
+    get seqId(){
+        return this._seqId;
     }
     /*Section2*/
-    getMasterCommands(){
-        return this._packet.masterCommands;
+    get slaveStatus(){
+        return this._slaveStatus;
     }
-    getPwmFrequency(){
-        return this._packet.pwmFrequency;
+    get pumpFeedback_ms(){
+        return this._pumpFeedback_ms;
     }
-    getPwmDutyCicle(){
-        return this._packet.pwmDutyCicle;
+    get auxInput(){
+        return this._auxInput;
     }
-    getAuxOutput(){
-        return this._packet.auxOutput;
-    }
-    /*Section2*/
-    getSlaveStatus(){
-        return this._packet.slaveStatus;
-    }
-    getPumpFeedback_ms(){
-        return this._packet.pumpFeedback_ms;
-    }
-    getAuxInput(){
-        return this._packet.auxInput;
-    }
-    getAuxSlaveError(){
-        return this._packet.auxSlaveError;
+    get auxSlaveError(){
+        return this._auxSlaveError;
     }
 
     /*_____________________________________________*/
-    //Advanced methods
-
-    //new
     clear(){
-        this._packet = {
-            /*Section1*/
-            seqId: 0,
-            /*Section3*/
-            slaveStatus: 0,
-            pumpFeedback_ms: 0,
-            auxInput: 0,
-            auxSlaveError: 0
-        } 
+        /*Section1*/
+        this._seqId= 0;
+        /*Section3*/
+        this._slaveStatus= 0;
+        this._pumpFeedback_ms= 0;
+        this._auxInput= 0;
+        this._auxSlaveError= 0;
     }
 
+    /*_____________________________________________*/
     assignFromBuffer(buffer) {
         const arr = [...buffer];
         /*Section1*/
-        this._packet.seqId = arr[0];
+        this._seqId = arr[0];
         /*Section2*/
-        this._packet.slaveStatus = arr[1];
-        this._packet.pumpFeedback_ms = (arr[2]<<8) | (arr[3]);
-        this._packet.auxInput = arr[4];
-        this._packet.auxSlaveError = arr[5];
+        this._slaveStatus = arr[1];
+        this._pumpFeedback_ms = (arr[2]<<8) | (arr[3]);
+        this._auxInput = arr[4];
+        this._auxSlaveError = arr[5];
     }
 
+    /*_____________________________________________*/
     convertToBuffer(){
         const arr = [];
         /*Section1*/
-        arr[0] = this._packet.seqId;
+        arr[0] = this._seqId;
         /*Section2*/
-        arr[1] = this._packet.slaveStatus;
-        arr[2] = this._packet.pumpFeedback_ms >> 8;
-        arr[3] = this._packet.pumpFeedback_ms & 0xFF;
-        arr[4] = this._packet.auxInput;
-        arr[5] = this._packet.auxSlaveError;
+        arr[1] = this._slaveStatus;
+        arr[2] = this._pumpFeedback_ms >> 8;
+        arr[3] = this._pumpFeedback_ms & 0xFF;
+        arr[4] = this._auxInput;
+        arr[5] = this._auxSlaveError;
         return Buffer.from(arr);
     }
 
+    /*_____________________________________________*/
     incSeqId(seqId){
-        if(seqId != undefined){
-            this._packet.seqId++;
-        }
+        this._packet.seqId++;
     }
 
+    /*_____________________________________________*/
     isAuxSlaveError(auxSlaveError){
-        const testMask = (auxSlaveError & 0xFF) & _frame.auxSlaveError;
+        const testMask = (auxSlaveError & 0xFF) & this._auxSlaveError;
         return (testMask == 0x00) ? false : true;
     }
 }
